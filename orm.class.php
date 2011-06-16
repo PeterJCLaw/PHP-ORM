@@ -1,6 +1,6 @@
 <?php
 class ormCollection {
-	
+
 	public function &__call($function, $args) {
 		if(preg_match("/^order_by_(.*?)_?(asc|desc)?$/", $function, $matches)) {
 			$a = (array)$this;
@@ -12,7 +12,7 @@ class ormCollection {
 		}
 		throw new BadMethodCallException("Unknown method.");
 	}
-	
+
 	public function __toString() {
 		return (string)count((array)$this);
 	}
@@ -27,9 +27,9 @@ class ormCollection {
  * @author		Russell Newman.
  **/
 abstract class orm {
-	
+
 	protected $ormSettings = array();
-	
+
 	/**
 	 * __construct
 	 *
@@ -40,24 +40,24 @@ abstract class orm {
 	 **/
 	public function __construct($id = null, $fields = null) {
 		require_once("db.class.php");
-		
+
 		// Prevent folks from trying to create objects using IDs and fields simultaneously.
 		if(isset($id, $fields)) throw new Exception("You cannot instantiate an object using ID and and array of fields. Use one or the other, but not both simultaneously.");
-		
+
 		// If ID is null and no fields are specified, we are creating a new object so stop processing here.
 		if($id == null and $fields == null) return;
-		
+
 		// If the fields haven't been passed in through $fields, look up using the ID number
 		if($fields == null) {
 			$db = db::singleton();
 			$fields = $db->oneRow("SELECT * FROM `".get_class($this)."` WHERE `id` = '$id';");
 			if(empty($fields)) throw new DomainException("No ".get_class($this)." object was found in the database with ID $id.");
 		}
-		
+
 		// Now set up all the fields we found in the DB (or that were passed in) as variables in the class
 		$this->ormBuildFromArray($fields);
 	}
-	
+
 	/**
 	 * ormBuildFromArray
 	 *
@@ -72,14 +72,14 @@ abstract class orm {
 			// When 'get' is run against this attribute (e.g. getGroup()), stdClasses are transformed into objects and returned.
 			if(substr($attribute, strlen($attribute) - 3) == '_id') $this->{substr($attribute, 0, strlen($attribute)-3)} = new stdClass();
 		}
-		
+
 		// Bundle up object attributes and hash them. This must be done after doing htmlentities, relationships, etc
 		foreach($this as $name => $obj) if($name != "ormSettings" and !is_object($obj)) $hash[$name] = $obj;
 		// Keysort fields and hash. When destructing the object, we compare against this hash to see if anything has changed.
 		ksort($hash);
 		$this->ormSettings['objectHash'] = md5(implode($hash));
 	}
-	
+
 	/**
 	 * __call
 	 *
@@ -89,47 +89,47 @@ abstract class orm {
 	 * @author	Russell Newman
 	 **/
 	public function &__call($function, $args) {
-		
+
 		// First, work out if a getter or setter was called
 		if(preg_match("/(get|set)([A-Z].*)/", $function, $matches)) {
 			// We have a getter or setter
 			$matches[2]{0} = strtolower($matches[2]{0});
 			$action = $matches[1];				// e.g. get
 			$subject = $matches[2];				// e.g. name
-			
+
 			if(!property_exists($this, $subject)) throw new BadMethodCallException("You tried to $action $subject, but there is no $subject variable. Check that the variable exists in your database, and that you have requested a valid object.");
 
 			if($action == "get") {
 				if($this->$subject instanceof stdClass) $this->$subject = new $subject($this->$subject."_id");
 				return $this->$subject;
 			}
-			
+
 			// When setting, could check for $this->validate$subject($arg[0]); which would be implemented by the user.
 			if($action == "set") {
 				$this->$subject = $args[0];
-				
+
 				// If the updated attribute ends in _id, blank out the associated object attribute (e.g. group for group_id)
 				// This ensures that when an ID is updated, the newly related object will be served, instead of the old one
 				if(substr($subject, strlen($subject) - 3) == '_id') $this->{substr($attribute, 0, strlen($attribute)-3)} = new stdClass();
-				
+
 				// Similarly, if the updated attribute is actually a related object, update the _id attribute also (e.g. group_id for group, see above)
 				if(is_object($args[0])) $this->{$subject."_id"} = $this->$subject->getId();
-				
+
 				// TODO: SHOULD RETURN REFERENCE TO THIS OBJECT TO ENABLE METHOD CHAINING
 				return $this;
 			}
 		}
-		
+
 		if(preg_match("/find_by_(.*)/", $function, $matches)) return $this->ormFindBy($matches[1], $args);
-		
+
 		throw new BadMethodCallException("There is no function called $function. Your arguments were:\n".print_r($args, true));
 	}
-	
+
 	/**
 	 * __callStatic
 	 * Intercepts static calls to missing functions.
 	 * Used to intercept find_by_[field]() functions made in static context.
-	 * 
+	 *
 	 * @static
 	 * @param	string	$function	Name of the function that was called.
 	 * @param	array	$args		Array of arguments that were passed to the function.
@@ -139,7 +139,7 @@ abstract class orm {
 	public static function __callStatic($function, $args) {
 		// Check whether called method is a find_by
 		if(preg_match("/find_by_(.*)/", $function, $matches)) return self::ormFindBy($matches[1], $args);
-		
+
 		// Intercepts comparison functions and performs to appropriate comparison.
 		// This is necessary to enable order_by functions.
 		if(preg_match("/_ormCompareBy_(.*)_(asc|desc)/", $function, $matches)) {
@@ -153,10 +153,10 @@ abstract class orm {
 			}
 			throw new Exception("You tried to perform a comparison (or sort/ordering) upon an attribute that does not exist. Are you sure the '{$matches[1]}' attribute exists inside '".get_class($args[0])."' objects?");
 		}
-		
+
 		throw new BadMethodCallException("There is no static function called $function. Your arguments were:\n".print_r($args, true));
 	}
-	
+
 	/**
 	 * ormFindBy
 	 * Parses find_by function calls, performs the lookups and returns the results
@@ -169,12 +169,12 @@ abstract class orm {
 	private function ormFindBy($fields, $args) {
 		// Works out class name based on whether we are static or not. This is for PHP < 5.3, which does not have get_called_class() and would return 'orm' in static context
 		$class = !(isset($this)) ? get_called_class() : get_class($this);
-		
+
 		// Explode the query into a set of field names, then check that we have a parameter for each field
 		$fields = explode("_and_", $fields);
-		
+
 		if(count($fields) != count($args)) throw new Exception("You have attempted to search on {count($fields)} fields, but have provided {count($args)} arguments to search those fields for. Ensure that you are providing a search term for each field specified.");
-		
+
 		// Build the fields and parameters into a WHERE array for the DB class
 		$where = array();
 		foreach($fields as $i => $field) {
@@ -185,13 +185,13 @@ abstract class orm {
 			$where[] = $w;
 			unset($w);
 		}
-		
+
 		// Run the select query
 		$db = db::singleton();
 		$db->select(array("*"), $class, $where);
 		$results = $db->runBatch();
 		$results = $results[0];
-		
+
 		// Single result - return an object
 		if(count($results) == 1) {
 			return new $class(null, $results[0]);
@@ -203,18 +203,18 @@ abstract class orm {
 		}
 		return new ormCollection();
 	}
-	
+
 	/**
 	 * __destruct
 	 * Collects up all object attributes, checks whether they have changed and commits to the database as necessary.
-	 * 
+	 *
 	 * @return	void
 	 * @author	Russell Newman
 	 **/
 	function __destruct() {
 		// Bundle all object vars up into an array, excluding ormSettings and objects (related objects are copied via xyz_id fields)
 		foreach($this as $name => $obj) if($name != "ormSettings" and !is_object($obj)) $set[$name] = $obj;
-		
+
 		// Sort vars and check against the hash made when constructing the object (to find if any changes have been made)
 		ksort($set);
 		if(empty($this->ormSettings['objectHash']) or $this->ormSettings['objectHash'] != md5(implode($set))) {
@@ -227,7 +227,7 @@ abstract class orm {
 			$db->runBatch();
 		}
 	}
-	
+
 	/**
 	 * getParent
 	 * Finds the specified parent object of this object in a 1-to-many relationship.
@@ -238,14 +238,14 @@ abstract class orm {
 	 **/
 	public function getParent($object = null) {
 		if($object == null) throw new InvalidArgumentException("You did not specify what type of parent object you wanted.");
-		
+
 		// Check that the ID of the parent is set and that we haven't already loaded the parent.
 		// (Parents that are not yet loaded will be populated with stdClass as opposed to the actual object).
 		if(!empty($this->{$object."_id"}) and $this->$object instanceof stdClass) $this->$object = new $object($this->{$object."_id"});
-		
+
 		return $this->$object;
 	}
-	
+
 	/**
 	 * getChildren
 	 * Finds the specified child objects of this object in a 1-to-many relationship. Can also filter and order child objects.
@@ -258,7 +258,7 @@ abstract class orm {
 	 **/
 	public function getChildren($object = null, $where = null, $order = null) {
 		if($object == null) throw new InvalidArgumentException("You did not specify what type of child object you wanted.");
-		
+
 		// Check to see if children elements are already loaded. Load them if we need them.
 		if(empty($this->{$object."_children"}->elements)) {
 			$this->{$object."_children"}->elements = array();
@@ -267,11 +267,11 @@ abstract class orm {
 			if($where != null) $where = " AND $where";
 			if($order != null) $order = "ORDER BY $order";
 			$children = $db->single("SELECT `id` FROM `$object` WHERE `".get_class($this)."_id` = '$this->id'$where $order");
-			
+
 			if(!empty($children)) foreach($children as $child) {
 				$this->{$object."_children"}->elements[$child['id']] = new $object($child['id']);
 			}
-		
+
 		// Re-order the children elements if a changed order has been requested.
 		} else if($order != $this->{$object."_children"}->order) {
 			$db = db::singleton();
@@ -280,13 +280,13 @@ abstract class orm {
 			$newChildren = array();
 			foreach($newOrder as $item) $newChildren[$item['id']] = $this->{$object."_children"}->elements[$item['id']];
 			$this->{$object."_children"}->elements = $newChildren;
-			
+
 			// TO DO: Cache orders of child elements.
 			// TO DO: Cache wheres of child elements.
 		}
 		return $this->{$object."_children"}->elements;
 	}
-	
+
 	/**
 	 * getRelated
 	 * Finds the specified related elements of this element in a many-to-many relationship, via an intermediary table.
@@ -301,21 +301,21 @@ abstract class orm {
 		if($object == null) throw new InvalidArgumentException("You did not specify what type of related objects you wanted.");
 		if(empty($this->id)) throw new InvalidArgumentException("This object does not have an ID, and thus cannot have related objects.");
 		if(!isset($this->{$object."_members"})) {
-			
+
 			// Build the name of the joining table. Create array, sort() to get the two names in alphabetical order, then implode with _ to get actual name.
 			$table = array($object, get_class($this));
 			$table = implode("_", sort($table));
 			$this->{$object."_members"} = array();
-			
+
 			$db = db::singleton();
 			$objects = $db->single("SELECT `{$object}_id` FROM `$table` WHERE `{get_class($this)}_id` = '$this->id'");
 			if(!empty($objects)) foreach($objects as $o) $this->{$object."_members"}[] = new $object($o['id']);
 		}
 		return $this->{$object."_members"};
-		
+
 		// could also add ORDER criteria and ASC/DESC
 	}
-	
+
 	/**
 	 * __toString
 	 * Returns a string of the object's 'name' attribute or, failing that, the ID of the object.
