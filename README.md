@@ -19,5 +19,11 @@ Now refer to the Wiki for usage instructions.
 
 I recommend that, where possible, you keep the ORM source files outside the directory that is published by your web server. That is, if your Apache server publishes the 'htdocs' directory, keep your ORM files above this directory, safe from prying eyes.
 
+## API Docs
+
+The API is fairly heavily documented using phpdoc-like syntax;
+ and this is accessible by running doxygen against the project.
+A doxyfile is provided for simplicity.
+
 ## Submodules, etc
 This project makes use of Seb Skuse's PHP Database class to perform all database operations. The Database class is included as a git submodule.
