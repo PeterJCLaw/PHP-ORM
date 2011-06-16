@@ -39,7 +39,7 @@ abstract class orm {
 	 * @author	Russell Newman
 	 **/
 	public function __construct($id = null, $fields = null) {
-		require_once("db.class.php");
+		require_once("dbman.class.php");
 
 		// Prevent folks from trying to create objects using IDs and fields simultaneously.
 		if(isset($id, $fields)) throw new Exception("You cannot instantiate an object using ID and and array of fields. Use one or the other, but not both simultaneously.");
@@ -49,13 +49,26 @@ abstract class orm {
 
 		// If the fields haven't been passed in through $fields, look up using the ID number
 		if($fields == null) {
-			$db = db::singleton();
+			$db = self::getConnection();
 			$fields = $db->oneRow("SELECT * FROM `".get_class($this)."` WHERE `id` = '$id';");
 			if(empty($fields)) throw new DomainException("No ".get_class($this)." object was found in the database with ID $id.");
 		}
 
 		// Now set up all the fields we found in the DB (or that were passed in) as variables in the class
 		$this->ormBuildFromArray($fields);
+	}
+
+	/**
+	 * getConnection
+	 * Gets the database connection suitable for this class.
+	 *
+	 * @return	null
+	 * @author	Peter Law
+	 */
+	private function getConnection() {
+		$className = get_called_class();
+		$db = dbman::getConnection($className);
+		return $db;
 	}
 
 	/**
@@ -187,7 +200,7 @@ abstract class orm {
 		}
 
 		// Run the select query
-		$db = db::singleton();
+		$db = self::getConnection();
 		$db->select(array("*"), $class, $where);
 		$results = $db->runBatch();
 		$results = $results[0];
@@ -218,7 +231,7 @@ abstract class orm {
 		// Sort vars and check against the hash made when constructing the object (to find if any changes have been made)
 		ksort($set);
 		if(empty($this->ormSettings['objectHash']) or $this->ormSettings['objectHash'] != md5(implode($set))) {
-			$db = db::singleton();
+			$db = self::getConnection();
 			if(!isset($this->id)) {
 				$db->insert($set, get_class($this));
 			} else {
@@ -275,7 +288,7 @@ abstract class orm {
 		if(empty($this->{$object."_children"}->elements)) {
 			$this->{$object."_children"}->elements = array();
 			$this->{$object."_children"}->order = $order;
-			$db = db::singleton();
+			$db = self::getConnection();
 			if($where != null) $where = " AND $where";
 			if($order != null) $order = "ORDER BY $order";
 			$children = $db->single("SELECT `id` FROM `$object` WHERE `".get_class($this)."_id` = '$this->id'$where $order");
@@ -286,7 +299,7 @@ abstract class orm {
 
 		// Re-order the children elements if a changed order has been requested.
 		} else if($order != $this->{$object."_children"}->order) {
-			$db = db::singleton();
+			$db = self::getConnection();
 			if($where != null) $where = " AND $where";
 			$newOrder = $db->single("SELECT `id` FROM `$object` WHERE `".get_class($this)."_id` = '$this->id' $where ORDER BY $order");
 			$newChildren = array();
@@ -319,7 +332,7 @@ abstract class orm {
 			$table = implode("_", sort($table));
 			$this->{$object."_members"} = array();
 
-			$db = db::singleton();
+			$db = self::getConnection();
 			$objects = $db->single("SELECT `{$object}_id` FROM `$table` WHERE `{get_class($this)}_id` = '$this->id'");
 			if(!empty($objects)) foreach($objects as $o) $this->{$object."_members"}[] = new $object($o['id']);
 		}
