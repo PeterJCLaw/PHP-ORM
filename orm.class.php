@@ -205,13 +205,13 @@ abstract class orm {
 	}
 
 	/**
-	 * __destruct
+	 * commit
 	 * Collects up all object attributes, checks whether they have changed and commits to the database as necessary.
 	 *
 	 * @return	void
 	 * @author	Russell Newman
 	 **/
-	function __destruct() {
+	function commit() {
 		// Bundle all object vars up into an array, excluding ormSettings and objects (related objects are copied via xyz_id fields)
 		foreach($this as $name => $obj) if($name != "ormSettings" and !is_object($obj)) $set[$name] = $obj;
 
@@ -226,6 +226,18 @@ abstract class orm {
 			}
 			$db->runBatch();
 		}
+	}
+
+	/**
+	 * __destruct
+	 * Collects up all object attributes, checks whether they have changed and commits to the database as necessary.
+	 * Calls commit under the covers.
+	 *
+	 * @return	void
+	 * @author	Peter Law
+	 **/
+	function __destruct() {
+		$this->commit();
 	}
 
 	/**
