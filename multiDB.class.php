@@ -63,7 +63,7 @@ class multiDB extends dbman
 	{
 		if (!is_subclass_of($ormName, 'orm'))
 		{
-			trigger_error("Class '$ormName' is not an orm class!", E_WARNING);
+			trigger_error("Class '$ormName' is not an orm class!", E_USER_WARNING);
 		}
 		$this->connections[$ormName] = $db;
 	}
