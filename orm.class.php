@@ -13,8 +13,12 @@ class ormCollection {
 		throw new BadMethodCallException("Unknown method.");
 	}
 
+	public function count() {
+		return count((array)$this);
+	}
+
 	public function __toString() {
-		return (string)count((array)$this);
+		return (string)$this->count();
 	}
 }
 
