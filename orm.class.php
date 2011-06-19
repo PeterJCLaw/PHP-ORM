@@ -1,6 +1,12 @@
 <?php
 class ormCollection {
 
+	public function __construct($results, $class) {
+		foreach($results as $i => $result) {
+			$this->{"a".$i} = new $class(null, $result);
+		}
+	}
+
 	public function &__call($function, $args) {
 		if(preg_match("/^order_by_(.*?)_?(asc|desc)?$/", $function, $matches)) {
 			$a = (array)$this;
@@ -209,12 +215,9 @@ abstract class orm {
 		$results = $db->runBatch();
 		$results = $results[0];
 
-		if(count($results) > 1) {
-			$out = new ormCollection();
-			foreach($results as $i => $result) $out->{"a".$i} = new $class(null, $result);
-			return $out;
-		}
-		return new ormCollection();
+		// Return a collection of objects
+		$collection = new ormCollection($results, $class);
+		return $collection;
 	}
 
 	/**
