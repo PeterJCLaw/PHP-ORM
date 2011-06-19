@@ -23,6 +23,13 @@ class ormCollection {
 		$this->{"a".$position} = $result;
 	}
 
+	public function first() {
+		$a = (array)$this;
+		foreach($a as $i => $r) {
+			return $r;
+		}
+	}
+
 	public function count() {
 		return count((array)$this);
 	}
