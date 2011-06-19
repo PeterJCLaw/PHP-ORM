@@ -209,11 +209,7 @@ abstract class orm {
 		$results = $db->runBatch();
 		$results = $results[0];
 
-		// Single result - return an object
-		if(count($results) == 1) {
-			return new $class(null, $results[0]);
-		// Many results - return a collection of objects
-		} else if(count($results) > 1) {
+		if(count($results) > 1) {
 			$out = new ormCollection();
 			foreach($results as $i => $result) $out->{"a".$i} = new $class(null, $result);
 			return $out;
