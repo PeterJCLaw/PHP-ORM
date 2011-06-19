@@ -1,9 +1,9 @@
 <?php
 class ormCollection {
 
-	public function __construct($results, $class) {
+	public function __construct($results = array()) {
 		foreach($results as $i => $result) {
-			$this->{"a".$i} = new $class(null, $result);
+			$this->addResult($i, $result);
 		}
 	}
 
@@ -13,10 +13,14 @@ class ormCollection {
 			$direction = empty($matches[2]) ? "asc" : $matches[2];
 			usort($a, array("not_sure_what_this_bit_is_for___doesnt_seem_to_break_anything", "_ormCompareBy_{$matches[1]}_{$direction}"));
 			$out = new ormCollection();
-			foreach($a as $i => $b) $out->{"a".$i} = $b;
+			foreach($a as $i => $b) $out->addResult($i, $b);
 			return $out;
 		}
 		throw new BadMethodCallException("Unknown method.");
+	}
+
+	private function addResult($position, $result) {
+		$this->{"a".$position} = $result;
 	}
 
 	public function count() {
@@ -215,8 +219,13 @@ abstract class orm {
 		$results = $db->runBatch();
 		$results = $results[0];
 
+		$resultsItems = array();
+		foreach ($results as $i => $r) {
+			$resultsItems[$i] = new $class(null, $r);
+		}
+
 		// Return a collection of objects
-		$collection = new ormCollection($results, $class);
+		$collection = new ormCollection($resultsItems);
 		return $collection;
 	}
 
