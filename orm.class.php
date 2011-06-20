@@ -258,6 +258,19 @@ abstract class orm {
 	}
 
 	/**
+	 * all
+	 * Lists all the items in the database.
+	 * At the moment this is a very blunt instrument, and probably should be re-done so that it's less insane.
+	 *
+	 * @return	array		An array of the objects that were found.
+	 * @author	Peter Law
+	 **/
+	public static function all() {
+		$results = self::selectAll();
+		return $results;
+	}
+
+	/**
 	 * commit
 	 * Collects up all object attributes, checks whether they have changed and commits to the database as necessary.
 	 *
