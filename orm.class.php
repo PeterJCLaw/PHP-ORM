@@ -125,7 +125,7 @@ abstract class orm {
 	public function &__call($function, $args) {
 
 		// First, work out if a getter or setter was called
-		if(preg_match("/(get|set)([A-Z].*)/", $function, $matches)) {
+		if(preg_match("/(get|set)([A-Z].+)/", $function, $matches)) {
 			// We have a getter or setter
 			$matches[2]{0} = strtolower($matches[2]{0});
 			$action = $matches[1];				// e.g. get
@@ -154,7 +154,7 @@ abstract class orm {
 			}
 		}
 
-		if(preg_match("/find_by_(.*)/", $function, $matches)) return $this->ormFindBy($matches[1], $args);
+		if(preg_match("/find_by_(.+)/", $function, $matches)) return $this->ormFindBy($matches[1], $args);
 
 		throw new BadMethodCallException("There is no function called $function. Your arguments were:\n".print_r($args, true));
 	}
@@ -172,11 +172,11 @@ abstract class orm {
 	 **/
 	public static function __callStatic($function, $args) {
 		// Check whether called method is a find_by
-		if(preg_match("/find_by_(.*)/", $function, $matches)) return self::ormFindBy($matches[1], $args);
+		if(preg_match("/find_by_(.+)/", $function, $matches)) return self::ormFindBy($matches[1], $args);
 
 		// Intercepts comparison functions and performs to appropriate comparison.
 		// This is necessary to enable order_by functions.
-		if(preg_match("/_ormCompareBy_(.*)_(asc|desc)/", $function, $matches)) {
+		if(preg_match("/_ormCompareBy_(.+)_(asc|desc)/", $function, $matches)) {
 			// Set sort up/down values depending on asc or desc
 			$up = ($matches[2] == "asc") ? 1 : -1;
 			$down = ($matches[2] == "asc") ? -1 : 1;
