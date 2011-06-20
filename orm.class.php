@@ -207,7 +207,11 @@ abstract class orm {
 		// Explode the query into a set of field names, then check that we have a parameter for each field
 		$fields = explode("_and_", $fields);
 
-		if(count($fields) != count($args)) throw new Exception("You have attempted to search on {count($fields)} fields, but have provided {count($args)} arguments to search those fields for. Ensure that you are providing a search term for each field specified.");
+		$fieldCount = count($fields);
+		$argCount = count($args);
+		if($fieldCount != $argCount) {
+			throw new Exception("You have attempted to search on $fieldCount fields, but have provided $argCount arguments to search those fields for. Ensure that you are providing a search term for each field specified.");
+		}
 
 		// Build the fields and parameters into a WHERE array for the DB class
 		$where = array();
