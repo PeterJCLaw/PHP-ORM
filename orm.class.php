@@ -197,7 +197,7 @@ abstract class orm {
 	 *
 	 * @param	string	$fields		The fields we are searching on, based on the method call (without the find_by_ part).
 	 * @param	array	$args		Array of arguments that correspond to desired search fields.
-	 * @return	mixed				Array or object, depending on whether one or many objects were found.
+	 * @return	array				An array of the objects that were found.
 	 * @author	Russell Newman
 	 **/
 	private function ormFindBy($fields, $args) {
