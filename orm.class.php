@@ -201,9 +201,6 @@ abstract class orm {
 	 * @author	Russell Newman
 	 **/
 	private function ormFindBy($fields, $args) {
-		// Works out class name based on whether we are static or not. This is for PHP < 5.3, which does not have get_called_class() and would return 'orm' in static context
-		$class = !(isset($this)) ? get_called_class() : get_class($this);
-
 		// Explode the query into a set of field names, then check that we have a parameter for each field
 		$fields = explode("_and_", $fields);
 
@@ -223,6 +220,26 @@ abstract class orm {
 			$where[] = $w;
 			unset($w);
 		}
+
+		$results = self::selectAll($where);
+		return $results;
+	}
+
+	/**
+	 * all
+	 * Lists all the items in the database.
+	 * At the moment this is a very blunt instrument, and probably should be re-done so that it's less insane.
+	 *
+	 * @param	array $where	A where array suitable for passing to db->select.
+	 * @return	array			An array of the objects that were found.
+	 * @author	Peter Law
+	 **/
+	private function selectAll($where = null) {
+		// TODO: limit things internally so that we don't end up with an
+		//       insanely large list. Possibly implement ormCollection
+		//       to do on-demand SQL calls of about 40 results at a time?
+
+		$class = get_called_class();
 
 		// Run the select query
 		$db = self::getConnection();
