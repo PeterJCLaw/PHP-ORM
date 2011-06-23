@@ -101,7 +101,9 @@ abstract class orm {
 	 **/
 	private function ormBuildFromArray($fields) {
 		foreach($fields as $attribute => $field) {
-			$this->$attribute = htmlentities($field);
+			// TODO: make html wrapping at this point fully optional.
+			// don't mess with items that aren't strings.
+			$this->$attribute = is_string($field) ? htmlentities($field) : $field;
 			// Identifies 1-n relationships by field name (e.g group_id) and makes a stdclass in 'group'.
 			// When 'get' is run against this attribute (e.g. getGroup()), stdClasses are transformed into objects and returned.
 			if(substr($attribute, strlen($attribute) - 3) == '_id') $this->{substr($attribute, 0, strlen($attribute)-3)} = new stdClass();
