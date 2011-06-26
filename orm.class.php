@@ -292,12 +292,12 @@ abstract class orm {
 	 * @author	Russell Newman
 	 **/
 	function commit() {
-		// Bundle all object vars up into an array, excluding ormSettings and objects (related objects are copied via xyz_id fields)
-		foreach($this as $name => $obj) if($name != "ormSettings" and !is_object($obj)) $set[$name] = $obj;
+		$objectHash = $this->ormBuildHash();
+		if(empty($this->ormSettings['objectHash']) or $this->ormSettings['objectHash'] != $objectHash) {
+			$set = array();
+			// Bundle all object vars up into an array, excluding ormSettings and objects (related objects are copied via xyz_id fields)
+			foreach($this as $name => $obj) if($name != "ormSettings" and !is_object($obj)) $set[$name] = $obj;
 
-		// Sort vars and check against the hash made when constructing the object (to find if any changes have been made)
-		ksort($set);
-		if(empty($this->ormSettings['objectHash']) or $this->ormSettings['objectHash'] != md5(implode($set))) {
 			$db = self::getConnection();
 			if(!isset($this->id)) {
 				$db->insert($set, get_class($this));
