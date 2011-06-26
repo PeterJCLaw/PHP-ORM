@@ -83,7 +83,7 @@ abstract class orm {
 	 * getConnection
 	 * Gets the database connection suitable for this class.
 	 *
-	 * @return	null
+	 * @return	The db connection for this object.
 	 * @author	Peter Law
 	 */
 	private function getConnection() {
@@ -96,7 +96,7 @@ abstract class orm {
 	 * ormBuildFromArray
 	 *
 	 * @param	array	$fields		Array of attributes for building the object, keyed on the attribute name.
-	 * @return	null
+	 * @return	void
 	 * @author	Russell Newman
 	 **/
 	private function ormBuildFromArray($fields) {
