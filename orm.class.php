@@ -184,7 +184,7 @@ abstract class orm {
 			$down = ($matches[2] == "asc") ? -1 : 1;
 			$attribute = $matches[1];
 			// Check that the variable we are comparing actually exists in both objects.
-			if(!empty($args[0]->$attribute) and !empty($args[1]->$attribute)) {
+			if(isset($args[0]->$attribute) and isset($args[1]->$attribute)) {
 				if ($args[0]->$attribute == $args[1]->$attribute) return 0;
 				return ($args[0]->$attribute < $args[1]->$attribute) ? $down : $up;
 			}
