@@ -11,7 +11,7 @@ class ormCollection {
 		if(preg_match("/^order_by_(.+?)(_(asc|desc))?$/", $function, $matches)) {
 			$a = (array)$this;
 			$direction = empty($matches[3]) ? "asc" : $matches[3];
-			usort($a, array($this, "_ormCompareBy_{$matches[1]}_{$direction}"));
+			usort($a, array('orm', "_ormCompareBy_{$matches[1]}_{$direction}"));
 			$out = new ormCollection();
 			foreach($a as $i => $b) $out->addResult($i, $b);
 			return $out;
