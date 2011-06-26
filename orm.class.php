@@ -108,12 +108,36 @@ abstract class orm {
 			// When 'get' is run against this attribute (e.g. getGroup()), stdClasses are transformed into objects and returned.
 			if(substr($attribute, strlen($attribute) - 3) == '_id') $this->{substr($attribute, 0, strlen($attribute)-3)} = new stdClass();
 		}
+		$this->ormUpdateHash();
+	}
 
+	/**
+	 * buildHash
+	 * Builds an internal hash used to check the state of this object, based on the current state.
+	 *
+	 * @return	void
+	 * @author	Peter Law
+	 **/
+	private function ormBuildHash() {
+		$hash = array();
 		// Bundle up object attributes and hash them. This must be done after doing htmlentities, relationships, etc
 		foreach($this as $name => $obj) if($name != "ormSettings" and !is_object($obj)) $hash[$name] = $obj;
 		// Keysort fields and hash. When destructing the object, we compare against this hash to see if anything has changed.
 		ksort($hash);
-		$this->ormSettings['objectHash'] = md5(implode($hash));
+		$objectHash = md5(implode($hash));
+		return $objectHash;
+	}
+
+	/**
+	 * updateHash
+	 * Rebuilds the internal hash used to check the state of this object to use the current state.
+	 *
+	 * @return	void
+	 * @author	Peter Law
+	 **/
+	private function ormUpdateHash() {
+		$objectHash = $this->ormBuildHash();
+		$this->ormSettings['objectHash'] = $objectHash;
 	}
 
 	/**
@@ -281,6 +305,8 @@ abstract class orm {
 				$db->update($set, get_class($this), array(array("WHERE", "id", $this->id)));
 			}
 			$db->runBatch();
+			// TODO: only do this if the db calls succeeded?
+			$this->ormUpdateHash();
 		}
 	}
 
