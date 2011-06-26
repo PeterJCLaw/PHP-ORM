@@ -182,12 +182,13 @@ abstract class orm {
 			// Set sort up/down values depending on asc or desc
 			$up = ($matches[2] == "asc") ? 1 : -1;
 			$down = ($matches[2] == "asc") ? -1 : 1;
+			$attribute = $matches[1];
 			// Check that the variable we are comparing actually exists in both objects.
-			if(!empty($args[0]->$matches[1]) and !empty($args[1]->$matches[1])) {
-				if ($args[0]->$matches[1] == $args[1]->$matches[1]) return 0;
-		    	return ($args[0]->$matches[1] < $args[1]->$matches[1]) ? $down : $up;
+			if(!empty($args[0]->$attribute) and !empty($args[1]->$attribute)) {
+				if ($args[0]->$attribute == $args[1]->$attribute) return 0;
+				return ($args[0]->$attribute < $args[1]->$attribute) ? $down : $up;
 			}
-			throw new Exception("You tried to perform a comparison (or sort/ordering) upon an attribute that does not exist. Are you sure the '{$matches[1]}' attribute exists inside '".get_class($args[0])."' objects?");
+			throw new Exception("You tried to perform a comparison (or sort/ordering) upon an attribute that does not exist. Are you sure the '{$attribute}' attribute exists inside '".get_class($args[0])."' objects?");
 		}
 
 		throw new BadMethodCallException("There is no static function called $function. Your arguments were:\n".print_r($args, true));
